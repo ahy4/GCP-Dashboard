@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCP Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f8f9fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #202124;
+            font-weight: 500;
+        }
+
+        .edit-btn {
+            padding: 8px 16px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .edit-btn:hover {
+            background: #f1f3f4;
+        }
+
+        .projects-table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .table-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e8eaed;
+            transition: background 0.2s;
+        }
+
+        .table-row:hover {
+            background: #f8f9fa;
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .project-name {
+            font-weight: 500;
+            color: #202124;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            min-width: 200px;
+        }
+
+        .service-links {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .service-link {
+            text-decoration: none;
+            color: #1a73e8;
+            font-size: 13px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .service-link:hover {
+            background: #e8f0fe;
+            transform: translateX(2px);
+        }
+
+        .service-link svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .empty-state {
+            padding: 40px;
+            text-align: center;
+            color: #5f6368;
+        }
+
+        .empty-state button {
+            margin-top: 16px;
+            padding: 8px 24px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .empty-state button:hover {
+            background: #1669c1;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #5f6368;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #f1f3f4;
+        }
+
+        .projects-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 12px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .modal-footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            padding: 8px 24px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #1a73e8;
+        }
+
+        .btn-secondary {
+            padding: 8px 24px;
+            background: white;
+            color: #5f6368;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #f1f3f4;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #5f6368;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>GCP Dashboard</h1>
+            <button class="edit-btn" onclick="openProjectModal()">Edit Projects</button>
+        </div>
+
+        <div id="projectsTable"></div>
+    </div>
+
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Manage Projects</h2>
+                <button class="close-btn" onclick="closeProjectModal()">×</button>
+            </div>
+            <div>
+                <textarea 
+                    id="projectsTextarea" 
+                    class="projects-textarea" 
+                    placeholder="Enter project IDs (one per line)&#10;&#10;Example:&#10;my-project-123&#10;another-project-456&#10;test-project-789"
+                ></textarea>
+                <div class="help-text">Enter one project ID per line. These will be saved locally in your browser.</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeProjectModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveProjects()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const services = [
+            {
+                name: 'Welcome',
+                shortName: 'Welcome',
+                icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>',
+                url: projectId => `https://console.cloud.google.com/welcome?project=${projectId}`
+            },
+            {
+                name: 'Logs Explorer',
+                shortName: 'Logs',
+                icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>',
+                url: projectId => {
+                    const now = new Date();
+                    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60000);
+                    const endTime = now.toISOString();
+                    const startTime = fiveMinutesAgo.toISOString();
+                    return `https://console.cloud.google.com/logs/query;query=;cursorTimestamp=${endTime};startTime=${startTime};endTime=${endTime}?project=${projectId}`;
+                }
+            },
+            {
+                name: 'Cloud Storage',
+                shortName: 'Storage',
+                icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>',
+                url: projectId => `https://console.cloud.google.com/storage/browser?project=${projectId}`
+            },
+            {
+                name: 'Error Reporting',
+                shortName: 'Errors',
+                icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
+                url: projectId => `https://console.cloud.google.com/errors?project=${projectId}`
+            },
+            {
+                name: 'IAM',
+                shortName: 'IAM',
+                icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>',
+                url: projectId => `https://console.cloud.google.com/iam-admin/iam?project=${projectId}`
+            },
+            {
+                name: 'Cloud Functions',
+                shortName: 'Functions',
+                icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 13h6v6h2v-6h6v-2h-6V5h-2v6H9V5H7v6H1v2h6v6h2z"/></svg>',
+                url: projectId => `https://console.cloud.google.com/functions/list?project=${projectId}`
+            },
+            {
+                name: 'Cloud Run',
+                shortName: 'Run',
+                icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></svg>',
+                url: projectId => `https://console.cloud.google.com/run?project=${projectId}`
+            }
+        ];
+
+        function loadProjects() {
+            const savedProjects = localStorage.getItem('gcpProjects') || '';
+            document.getElementById('projectsTextarea').value = savedProjects;
+            renderTable();
+        }
+
+        function renderTable() {
+            const savedProjects = localStorage.getItem('gcpProjects') || '';
+            const projectList = savedProjects.split('\n').filter(p => p.trim());
+            const tableContainer = document.getElementById('projectsTable');
+
+            if (projectList.length === 0) {
+                tableContainer.innerHTML = `
+                    <div class="projects-table">
+                        <div class="empty-state">
+                            <p>No projects configured</p>
+                            <button onclick="openProjectModal()">Add Projects</button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            let tableHTML = '<div class="projects-table">';
+
+            projectList.forEach(projectId => {
+                tableHTML += `
+                    <div class="table-row">
+                        <div class="project-name">${projectId}</div>
+                        <div class="service-links">
+                            ${services.map(service => `
+                                <a href="${service.url(projectId)}" target="_blank" class="service-link" title="${service.name}">
+                                    ${service.icon}
+                                    <span>${service.shortName}</span>
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            tableHTML += '</div>';
+            tableContainer.innerHTML = tableHTML;
+        }
+
+        function openProjectModal() {
+            document.getElementById('projectModal').classList.add('active');
+        }
+
+        function closeProjectModal() {
+            document.getElementById('projectModal').classList.remove('active');
+        }
+
+        function saveProjects() {
+            const projectsText = document.getElementById('projectsTextarea').value;
+            localStorage.setItem('gcpProjects', projectsText);
+            renderTable();
+            closeProjectModal();
+        }
+
+        document.getElementById('projectModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('projectModal')) {
+                closeProjectModal();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeProjectModal();
+            }
+        });
+
+        loadProjects();
+    </script>
+</body>
+</html>
