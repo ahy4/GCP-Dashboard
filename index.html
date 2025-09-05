@@ -294,13 +294,7 @@
                 name: 'Logs Explorer',
                 shortName: 'Logs',
                 icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>',
-                url: projectId => {
-                    const now = new Date();
-                    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60000);
-                    const endTime = now.toISOString();
-                    const startTime = fiveMinutesAgo.toISOString();
-                    return `https://console.cloud.google.com/logs/query;query=;cursorTimestamp=${endTime};startTime=${startTime};endTime=${endTime}?project=${projectId}`;
-                }
+                url: projectId => `https://console.cloud.google.com/logs/query;query=;duration=PT5M?project=${projectId}`
             },
             {
                 name: 'Cloud Storage',
